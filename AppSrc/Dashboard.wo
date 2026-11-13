@@ -1,0 +1,107 @@
+Use cWebView.pkg
+Use cWebPanel.pkg
+Use cWebGroup.pkg
+Use cWebHtmlBox.pkg
+
+// Las Select se incluyen despues en WebApp.src
+Register_Object oSelectLiga
+Register_Object oSelectEquipo
+Register_Object oSelectEntrenador
+Register_Object oSelectJugador
+Register_Object oSelectPosicion
+
+// Pantalla de inicio: un acceso directo (tile) por cada Select de la aplicacion.
+Object oDashboard is a cWebView
+
+    // Importante para el estilo drilldown: el Dashboard NO tiene DDO ni Server,
+    // asi las Select que se abren desde aqui no quedan filtradas por ningun padre.
+
+    Set piMaxWidth to 1024
+
+    Set psCaption to "Inicio"
+    Set peViewType to vtUndefined
+    Set pbShowCaption to False
+    Set psCSSClass to "Dashboard"
+
+    Object oWebMainPanel is a cWebPanel
+        Set piColumnCount to 12
+        WebSetResponsive piColumnCount rmMobile to 1
+
+        Object oTiles_grp is a cWebGroup
+            Set piColumnSpan to 0
+            Set pbShowBorder to False
+            Set pbShowCaption to False
+            Set piColumnCount to 12
+            Set psCSSClass to "TilesGroup"
+
+            Object oLigasTile is a cWebHtmlBox
+                Set pbServerOnClick to True
+                Set piColumnSpan to 6
+                Set psCSSClass to "Tile Light"
+                Set psHtml to '<div class="WebCon_Sizer" data-ServerOnClick="openview"><div class="Tile_Title">Ligas</div><div class="Tile_Subtitle">Ver y mantener ligas</div></div>'
+
+                WebRegisterPath ntNavigateForwardCustom oSelectLiga
+
+                Procedure OnClick String sId String sParam
+                    Send NavigatePath
+                End_Procedure
+            End_Object
+
+            Object oEquiposTile is a cWebHtmlBox
+                Set pbServerOnClick to True
+                Set piColumnSpan to 6
+                Set piColumnIndex to 6
+                Set psCSSClass to "Tile LightAlternate"
+                Set psHtml to '<div class="WebCon_Sizer" data-ServerOnClick="openview"><div class="Tile_Title">Equipos</div><div class="Tile_Subtitle">Ver y mantener equipos</div></div>'
+
+                WebRegisterPath ntNavigateForwardCustom oSelectEquipo
+
+                Procedure OnClick String sId String sParam
+                    Send NavigatePath
+                End_Procedure
+            End_Object
+
+            Object oEntrenadoresTile is a cWebHtmlBox
+                Set pbServerOnClick to True
+                Set piColumnSpan to 6
+                Set psCSSClass to "Tile Dark"
+                Set psHtml to '<div class="WebCon_Sizer" data-ServerOnClick="openview"><div class="Tile_Title">Entrenadores</div><div class="Tile_Subtitle">Ver y mantener entrenadores</div></div>'
+
+                WebRegisterPath ntNavigateForwardCustom oSelectEntrenador
+
+                Procedure OnClick String sId String sParam
+                    Send NavigatePath
+                End_Procedure
+            End_Object
+
+            Object oJugadoresTile is a cWebHtmlBox
+                Set pbServerOnClick to True
+                Set piColumnSpan to 6
+                Set piColumnIndex to 6
+                Set psCSSClass to "Tile DarkAlternate"
+                Set psHtml to '<div class="WebCon_Sizer" data-ServerOnClick="openview"><div class="Tile_Title">Jugadores</div><div class="Tile_Subtitle">Ver y mantener jugadores</div></div>'
+
+                WebRegisterPath ntNavigateForwardCustom oSelectJugador
+
+                Procedure OnClick String sId String sParam
+                    Send NavigatePath
+                End_Procedure
+            End_Object
+
+            Object oPosicionesTile is a cWebHtmlBox
+                Set pbServerOnClick to True
+                Set piColumnSpan to 12
+                Set psCSSClass to "Tile Light"
+                Set psHtml to '<div class="WebCon_Sizer" data-ServerOnClick="openview"><div class="Tile_Title">Posiciones</div><div class="Tile_Subtitle">Ver y mantener posiciones</div></div>'
+
+                WebRegisterPath ntNavigateForwardCustom oSelectPosicion
+
+                Procedure OnClick String sId String sParam
+                    Send NavigatePath
+                End_Procedure
+            End_Object
+        End_Object
+
+    End_Object
+
+End_Object

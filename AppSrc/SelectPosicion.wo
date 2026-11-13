@@ -1,0 +1,136 @@
+Use cWebView.pkg
+Use cWebPanel.pkg
+Use cWebButton.pkg
+Use cWebList.pkg
+Use cWebColumn.pkg
+Use cWebLabel.pkg
+Use cWebMenuGroup.pkg
+Use cWebMenuItem.pkg
+Use cWebColumnButton.pkg
+
+Use cposicionDataDictionary.dd
+
+Register_Object oZoomPosicion
+
+// SELECT de Posicion.
+//  - Desde el menu / Dashboard: mantenimiento de posiciones.
+//  - Como lookup desde la Zoom de JugadorPosicion: al elegir una se cierra (nfFromChild).
+Object oSelectPosicion is a cWebView
+    Set psCaption to "Posiciones"
+    Set pbShowCaption to False
+    Set peWebViewStyle to wvsDrillDown
+    Set peViewType to vtSelect
+    Set psStateViewName to "Posiciones"
+
+    Set piMaxWidth to 1024
+    Set piColumnCount to 6
+    WebSetResponsive piColumnCount rmTabletPortrait to 3
+
+    Object oposicionDD is a cposicionDataDictionary
+        Set Auto_Fill_State to True
+    End_Object
+
+    Set Main_DD to oposicionDD
+    Set Server  to oposicionDD
+
+    // Texto de ayuda que se muestra cuando se abre para elegir una posicion
+    Object oHeader is a cWebLabel
+        Set psCaption to ""
+        Set psCSSClass to "LabelCaption"
+        Set piColumnSpan to 0
+    End_Object
+
+    Object oList is a cWebList
+        Set piColumnSpan to 0
+        Set pbFillHeight to True
+        Set pbServerOnRowClick to True
+        Set psCSSClass to "MobileList"
+        Set pbShowHeader to False
+        Set piSortColumn to 0   // ordena y busca por Nombre
+        Set psPlaceHolder to "No hay posiciones"
+
+        Object oposicionNombre is a cWebColumn
+            Entry_Item posicion.Nombre
+            Set psCaption to "Posicion"
+            Set psCSSClass to "RowCaption"
+        End_Object
+
+        Object oDetailButton is a cWebColumnButton
+            Set piWidth to 50
+            Set pbFixedWidth to True
+            Set pbResizable to False
+            Set psCaption to "btn"
+            Set psBtnCssClass to "WebButtonIcon WebIcon_Info"
+            Set peAlign to alignRight
+
+            WebRegisterPath ntNavigateForward oZoomPosicion
+
+            Procedure OnClick String sButton String sRowId
+                Send NavigatePath
+            End_Procedure
+
+            Procedure OnGetNavigateForwardData tWebNavigateData ByRef NavigateData Handle hoToView
+                Move True to NavigateData.bReadOnly
+            End_Procedure
+        End_Object
+
+        Procedure OnRowClick String sRowID
+            tWebNavigateData NavigateData
+            Get GetNavigateData to NavigateData
+            Case Begin
+                Case (NavigateData.eNavigateType=nfFromChild)
+                Case (NavigateData.eNavigateType=nfFromMain)
+                    Send NavigateClose Self
+                    Case Break
+                Case Else
+                    Send NavigatePath of oDetailButton
+            Case End
+        End_Procedure
+    End_Object
+
+    Object oActionGroup is a cWebMenuGroup
+        Set psGroupName to "MainActions"
+
+        Object oSearch is a cWebMenuItem
+            Set psCaption to C_$Search
+            Set psCSSClass to "WebPromptMenuItem"
+
+            Procedure OnClick
+                Send Search of oList
+            End_Procedure
+        End_Object
+
+        Object oNewButton is a cWebMenuItem
+            Set psCaption to "Nueva posicion"
+            Set psCSSClass to "WebClearMenuItem"
+
+            WebRegisterPath ntNavigateForward oZoomPosicion Self "NuevaPosicion"
+
+            Procedure OnClick
+                Send NavigatePath
+            End_Procedure
+
+            Procedure OnGetNavigateForwardData tWebNavigateData ByRef NavigateData Handle hoToView
+                Move True to NavigateData.bNewRecord
+            End_Procedure
+        End_Object
+    End_Object
+
+    Procedure OnNavigateForward tWebNavigateData NavigateData Handle hoInvokingView Handle hoInvokingObject
+        Boolean bLookup
+        String sHeader
+
+        Send SetBreadcrumbCaption "Posiciones"
+        Send SetHeaderCaption     "Posiciones"
+
+        Move (NavigateData.eNavigateType=nfFromChild or NavigateData.eNavigateType=nfFromMain) to bLookup
+        WebSet pbRender of oNewButton    to (not(bLookup))
+        WebSet pbRender of oDetailButton to (not(bLookup))
+
+        // Si quien nos llama manda un texto de ayuda, lo mostramos arriba
+        Get NamedValueGet NavigateData.NamedValues "Cabecera" to sHeader
+        WebSet psCaption of oHeader to sHeader
+        WebSet pbRender  of oHeader to (sHeader<>"")
+    End_Procedure
+
+End_Object

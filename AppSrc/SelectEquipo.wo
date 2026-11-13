@@ -1,0 +1,184 @@
+Use cWebView.pkg
+Use cWebPanel.pkg
+Use cWebButton.pkg
+Use cWebList.pkg
+Use cWebColumn.pkg
+Use cWebLabel.pkg
+Use cWebMenuGroup.pkg
+Use cWebMenuItem.pkg
+Use cWebColumnButton.pkg
+
+Use cligaDataDictionary.dd
+Use cequipoDataDictionary.dd
+
+Register_Object oZoomEquipo
+
+// SELECT de Equipo: lista de equipos.
+// Se puede abrir de tres formas:
+//  - Desde el menu: todos los equipos.
+//  - Desde la Zoom de una liga ("Ver equipos"): solo los equipos de esa liga (nfFromParent).
+//  - Como lookup desde la Zoom de un entrenador/jugador: al elegir uno se cierra (nfFromChild).
+Object oSelectEquipo is a cWebView
+    Set psCaption to "Equipos"
+    Set pbShowCaption to False
+    Set peWebViewStyle to wvsDrillDown
+    Set peViewType to vtSelect
+    Set psStateViewName to "Equipos"
+
+    Set piMaxWidth to 1024
+    Set piColumnCount to 6
+    WebSetResponsive piColumnCount rmTabletPortrait to 3
+
+    // Estructura de DDO: equipo y su padre liga
+    Object oligaDD is a cligaDataDictionary
+    End_Object
+
+    Object oequipoDD is a cequipoDataDictionary
+        Set DDO_Server to oligaDD
+        Set Auto_Fill_State to True
+    End_Object
+
+    Set Main_DD to oequipoDD
+    Set Server  to oequipoDD
+
+    // Cabecera que solo se ve cuando la lista esta filtrada por una liga
+    Object oHeader is a cWebLabel
+        Set psCaption to ""
+        Set psCSSClass to "LabelCaption"
+        Set piColumnSpan to 0
+    End_Object
+
+    Object oList is a cWebList
+        Set piColumnSpan to 0
+        Set pbFillHeight to True
+        Set pbServerOnRowClick to True
+        Set psCSSClass to "MobileList"
+        Set pbShowHeader to False
+        Set piSortColumn to 0   // ordena y busca por Nombre
+        Set psPlaceHolder to "No hay equipos"
+
+        // Columna 0: nombre del equipo
+        Object oequipoNombre is a cWebColumn
+            Entry_Item equipo.Nombre
+            Set psCaption to "Equipo"
+            Set psCSSClass to "RowCaption"
+        End_Object
+
+        // Columna 1: boton de detalle -> Zoom en solo lectura
+        Object oDetailButton is a cWebColumnButton
+            Set piWidth to 50
+            Set pbFixedWidth to True
+            Set pbResizable to False
+            Set psCaption to "btn"
+            Set psBtnCssClass to "WebButtonIcon WebIcon_Info"
+            Set peAlign to alignRight
+            Set piListRowSpan to 2
+
+            WebRegisterPath ntNavigateForward oZoomEquipo
+
+            Procedure OnClick String sButton String sRowId
+                Send NavigatePath
+            End_Procedure
+
+            Procedure OnGetNavigateForwardData tWebNavigateData ByRef NavigateData Handle hoToView
+                Move True to NavigateData.bReadOnly
+            End_Procedure
+        End_Object
+
+        // Columna 2: liga del equipo (segunda linea)
+        Object oligaNombre is a cWebColumn
+            Entry_Item liga.Nombre
+            Set psCaption to "Liga"
+            Set pbNewLine to True
+            Set psCSSClass to "RowDetail"
+        End_Object
+
+        Procedure OnRowClick String sRowID
+            tWebNavigateData NavigateData
+            Get GetNavigateData to NavigateData
+            Case Begin
+                Case (NavigateData.eNavigateType=nfFromChild)
+                Case (NavigateData.eNavigateType=nfFromMain)
+                    // lookup: devolver el equipo elegido
+                    Send NavigateClose Self
+                    Case Break
+                Case Else
+                    // desde el menu o desde una liga: ir a la Zoom del equipo
+                    Send NavigatePath of oDetailButton
+            Case End
+        End_Procedure
+    End_Object
+
+    Object oActionGroup is a cWebMenuGroup
+        Set psGroupName to "MainActions"
+
+        Object oSearch is a cWebMenuItem
+            Set psCaption to C_$Search
+            Set psCSSClass to "WebPromptMenuItem"
+
+            Procedure OnClick
+                Send Search of oList
+            End_Procedure
+        End_Object
+
+        Object oNewButton is a cWebMenuItem
+            Set psCaption to "Nuevo equipo"
+            Set psCSSClass to "WebClearMenuItem"
+
+            WebRegisterPath ntNavigateForward oZoomEquipo Self "NuevoEquipo"
+
+            Procedure OnClick
+                Send NavigatePath
+            End_Procedure
+
+            Procedure OnGetNavigateForwardData tWebNavigateData ByRef NavigateData Handle hoToView
+                Move True to NavigateData.bNewRecord
+            End_Procedure
+        End_Object
+
+        Object oFindTop is a cWebMenuItem
+            Set psCaption to C_$Top
+            Set peActionDisplay to adMenu
+            Set pbBeginGroup to True
+
+            Procedure OnClick
+                Send MoveToFirstRow of oList
+            End_Procedure
+        End_Object
+
+        Object oFindLast is a cWebMenuItem
+            Set psCaption to C_$Bottom
+            Set peActionDisplay to adMenu
+
+            Procedure OnClick
+                Send MoveToLastRow of oList
+            End_Procedure
+        End_Object
+    End_Object
+
+    Procedure OnNavigateForward tWebNavigateData NavigateData Handle hoInvokingView Handle hoInvokingObject
+        Boolean bLookup
+
+        Send SetBreadcrumbCaption "Equipos"
+        Send SetHeaderCaption     "Equipos"
+
+        Move (NavigateData.eNavigateType=nfFromChild or NavigateData.eNavigateType=nfFromMain) to bLookup
+        WebSet pbRender of oNewButton    to (not(bLookup))
+        WebSet pbRender of oDetailButton to (not(bLookup))
+        WebSet pbRender of oligaNombre   to True
+        WebSet pbRender of oHeader       to False
+
+        If (NavigateData.eNavigateType=nfFromParent) Begin
+            // Lista filtrada por la liga desde la que venimos
+            WebSet peDbGridType of oList to gtAllData
+            WebSet pbRender of oHeader to True
+            WebSet psCaption of oHeader to ("Liga: " + Trim(liga.Nombre))
+            WebSet pbRender of oligaNombre to False   // ya sabemos la liga
+            Send SetHeaderCaption ("Equipos de " + Trim(liga.Nombre))
+        End
+        Else Begin
+            WebSet peDbGridType of oList to gtAutomatic
+        End
+    End_Procedure
+
+End_Object

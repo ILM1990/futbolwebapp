@@ -1,0 +1,39 @@
+# =====================================================================
+# futbolwebapp - DataFlex 25 web app
+# Lo que NO se sube a GitHub
+# =====================================================================
+
+# --- Credenciales de la base de datos (MySQL) -------------------------
+# Los .int guardan la contrasena de MySQL en texto plano (SERVER_NAME).
+# Se regeneran con: Database > SQL Connect/Repair Wizard
+Data/*.int
+Data/DFConnId.ini
+
+# --- Sesiones del servidor web (datos temporales y tokens) ------------
+Data/WebAppSession.*
+Data/webappsession.k*
+
+# --- Archivos generados al compilar / ejecutar ------------------------
+Programs/*.exe
+Programs/*.dbg
+Programs/*.log
+AppSrc/*.exe.manifest
+AppSrc/*.dep
+AppSrc/*.prn
+AppSrc/*.err
+*.cch
+*.err
+*.log
+
+# El motor JavaScript se vuelve a copiar en AppHtml\DfEngine al compilar
+# (CopyJavaScriptEngine=1 en AppSrc\WebApp.cfg)
+AppHtml/DfEngine/
+
+# --- Configuracion local de Studio (cada usuario la suya) --------------
+IdeSrc/Workspace.loc
+IdeSrc/*.mtd
+IdeSrc/*.dsk
+
+# --- Basura del sistema ------------------------------------------------
+Thumbs.db
+desktop.ini

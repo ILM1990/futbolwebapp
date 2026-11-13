@@ -1,0 +1,156 @@
+﻿Use cWebView.pkg
+Use cWebPanel.pkg
+Use cWebButton.pkg
+Use cWebList.pkg
+Use cWebColumn.pkg
+Use cWebMenuGroup.pkg
+Use cWebMenuItem.pkg
+Use cWebColumnButton.pkg
+
+Use cligaDataDictionary.dd
+
+// La Zoom se declara aqui porque se incluye despues en WebApp.src
+Register_Object oZoomLiga
+
+// SELECT de Liga: lista de todas las ligas.
+// Al pulsar una fila (o el boton "i") se navega a la Zoom de esa liga.
+Object oSelectLiga is a cWebView
+    Set psCaption to "Ligas"
+    Set pbShowCaption to False
+    Set peWebViewStyle to wvsDrillDown
+    Set peViewType to vtSelect
+    Set psStateViewName to "Ligas"
+
+    Set piMaxWidth to 1024
+    Set piColumnCount to 6
+    WebSetResponsive piColumnCount rmTabletPortrait to 3
+
+    // Estructura de DDO: la vista trabaja con la tabla liga
+    Object oligaDD is a cligaDataDictionary
+        Set Auto_Fill_State to True
+    End_Object
+
+    Set Main_DD to oligaDD
+    Set Server  to oligaDD
+
+    Object oList is a cWebList
+        Set piColumnSpan to 0
+        Set pbFillHeight to True
+        Set pbServerOnRowClick to True
+        Set psCSSClass to "MobileList"
+        Set pbShowHeader to False
+        Set piSortColumn to 0   // ordena y busca por Nombre (indice uqLigaNombrePais)
+
+        // Columna 0: nombre de la liga (linea principal)
+        Object oligaNombre is a cWebColumn
+            Entry_Item liga.Nombre
+            Set psCaption to "Liga"
+            Set psCSSClass to "RowCaption"
+        End_Object
+
+        // Columna 1: boton de detalle -> Zoom en modo solo lectura
+        Object oDetailButton is a cWebColumnButton
+            Set piWidth to 50
+            Set pbFixedWidth to True
+            Set pbResizable to False
+            Set psCaption to "btn"
+            Set psBtnCssClass to "WebButtonIcon WebIcon_Info"
+            Set peAlign to alignRight
+            Set piListRowSpan to 2
+
+            WebRegisterPath ntNavigateForward oZoomLiga
+
+            Procedure OnClick String sButton String sRowId
+                Send NavigatePath
+            End_Procedure
+
+            Procedure OnGetNavigateForwardData tWebNavigateData ByRef NavigateData Handle hoToView
+                Move True to NavigateData.bReadOnly
+            End_Procedure
+        End_Object
+
+        // Columna 2: pais (segunda linea, texto pequeno)
+        Object oligaPais is a cWebColumn
+            Entry_Item liga.Pais
+            Set psCaption to "Pais"
+            Set pbNewLine to True
+            Set psCSSClass to "RowDetail"
+        End_Object
+
+        Procedure OnRowClick String sRowID
+            tWebNavigateData NavigateData
+            Get GetNavigateData to NavigateData
+            Case Begin
+                Case (NavigateData.eNavigateType=nfFromChild)
+                Case (NavigateData.eNavigateType=nfFromMain)
+                    // Se ha abierto como lookup desde otra Zoom (p.ej. elegir la liga de un equipo):
+                    // al pulsar la fila se cierra y devuelve la liga elegida
+                    Send NavigateClose Self
+                    Case Break
+                Case Else
+                    // Uso normal desde el menu: ir a la Zoom de la liga
+                    Send NavigatePath of oDetailButton
+            Case End
+        End_Procedure
+    End_Object
+
+    Object oActionGroup is a cWebMenuGroup
+        Set psGroupName to "MainActions"
+
+        Object oSearch is a cWebMenuItem
+            Set psCaption to C_$Search
+            Set psCSSClass to "WebPromptMenuItem"
+
+            Procedure OnClick
+                Send Search of oList
+            End_Procedure
+        End_Object
+
+        Object oNewButton is a cWebMenuItem
+            Set psCaption to "Nueva liga"
+            Set psCSSClass to "WebClearMenuItem"
+
+            WebRegisterPath ntNavigateForward oZoomLiga Self "NuevaLiga"
+
+            Procedure OnClick
+                Send NavigatePath
+            End_Procedure
+
+            Procedure OnGetNavigateForwardData tWebNavigateData ByRef NavigateData Handle hoToView
+                Move True to NavigateData.bNewRecord
+            End_Procedure
+        End_Object
+
+        Object oFindTop is a cWebMenuItem
+            Set psCaption to C_$Top
+            Set peActionDisplay to adMenu
+            Set pbBeginGroup to True
+
+            Procedure OnClick
+                Send MoveToFirstRow of oList
+            End_Procedure
+        End_Object
+
+        Object oFindLast is a cWebMenuItem
+            Set psCaption to C_$Bottom
+            Set peActionDisplay to adMenu
+
+            Procedure OnClick
+                Send MoveToLastRow of oList
+            End_Procedure
+        End_Object
+    End_Object
+
+    Procedure OnNavigateForward tWebNavigateData NavigateData Handle hoInvokingView Handle hoInvokingObject
+        Boolean bLookup
+
+        // Si se abre como lookup desde otra vista, ocultamos "Nueva" y el boton de detalle
+        Move (NavigateData.eNavigateType=nfFromChild or NavigateData.eNavigateType=nfFromMain) to bLookup
+        WebSet pbRender of oNewButton    to (not(bLookup))
+        WebSet pbRender of oDetailButton to (not(bLookup))
+
+        Send SetBreadcrumbCaption "Ligas"
+        Send SetHeaderCaption     "Ligas"
+    End_Procedure
+
+End_Object

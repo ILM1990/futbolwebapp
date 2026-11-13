@@ -1,0 +1,192 @@
+Use cWebView.pkg
+Use cWebPanel.pkg
+Use cWebButton.pkg
+Use cWebList.pkg
+Use cWebColumn.pkg
+Use cWebLabel.pkg
+Use cWebMenuGroup.pkg
+Use cWebMenuItem.pkg
+Use cWebColumnButton.pkg
+
+Use cligaDataDictionary.dd
+Use cequipoDataDictionary.dd
+Use cjugadorDataDictionary.dd
+
+Register_Object oZoomJugador
+
+// SELECT de Jugador.
+//  - Desde el menu / Dashboard: todos los jugadores.
+//  - Desde la Zoom de un equipo ("Ver jugador"): solo los de ese equipo (nfFromParent).
+Object oSelectJugador is a cWebView
+    Set psCaption to "Jugadores"
+    Set pbShowCaption to False
+    Set peWebViewStyle to wvsDrillDown
+    Set peViewType to vtSelect
+    Set psStateViewName to "Jugadores"
+
+    Set piMaxWidth to 1024
+    Set piColumnCount to 6
+    WebSetResponsive piColumnCount rmTabletPortrait to 3
+
+    // Estructura de DDO: jugador -> equipo -> liga
+    Object oligaDD is a cligaDataDictionary
+    End_Object
+
+    Object oequipoDD is a cequipoDataDictionary
+        Set DDO_Server to oligaDD
+    End_Object
+
+    Object ojugadorDD is a cjugadorDataDictionary
+        Set DDO_Server to oequipoDD
+        Set Auto_Fill_State to True
+    End_Object
+
+    Set Main_DD to ojugadorDD
+    Set Server  to ojugadorDD
+
+    Object oHeader is a cWebLabel
+        Set psCaption to ""
+        Set psCSSClass to "LabelCaption"
+        Set piColumnSpan to 0
+    End_Object
+
+    Object oList is a cWebList
+        Set piColumnSpan to 0
+        Set pbFillHeight to True
+        Set pbServerOnRowClick to True
+        Set psCSSClass to "MobileList"
+        Set pbShowHeader to False
+        Set piSortColumn to 0   // ordena y busca por Apellido
+        Set psPlaceHolder to "No hay jugadores"
+
+        Object ojugadorApellido is a cWebColumn
+            Entry_Item jugador.Apellido
+            Set psCaption to "Apellido"
+            Set psCSSClass to "RowCaption"
+        End_Object
+
+        Object ojugadorNombre is a cWebColumn
+            Entry_Item jugador.Nombre
+            Set psCaption to "Nombre"
+            Set psCSSClass to "RowCaption"
+        End_Object
+
+        Object oDetailButton is a cWebColumnButton
+            Set piWidth to 50
+            Set pbFixedWidth to True
+            Set pbResizable to False
+            Set psCaption to "btn"
+            Set psBtnCssClass to "WebButtonIcon WebIcon_Info"
+            Set peAlign to alignRight
+            Set piListRowSpan to 2
+
+            WebRegisterPath ntNavigateForward oZoomJugador
+
+            Procedure OnClick String sButton String sRowId
+                Send NavigatePath
+            End_Procedure
+
+            Procedure OnGetNavigateForwardData tWebNavigateData ByRef NavigateData Handle hoToView
+                Move True to NavigateData.bReadOnly
+            End_Procedure
+        End_Object
+
+        Object oequipoNombre is a cWebColumn
+            Entry_Item equipo.Nombre
+            Set psCaption to "Equipo"
+            Set pbNewLine to True
+            Set psCSSClass to "RowDetail"
+        End_Object
+
+        Object ojugadorNacionalidad is a cWebColumn
+            Entry_Item jugador.Nacionalidad
+            Set psCaption to "Nacionalidad"
+            Set psCSSClass to "RowDetail"
+        End_Object
+
+        Procedure OnRowClick String sRowID
+            tWebNavigateData NavigateData
+            Get GetNavigateData to NavigateData
+            Case Begin
+                Case (NavigateData.eNavigateType=nfFromChild)
+                Case (NavigateData.eNavigateType=nfFromMain)
+                    Send NavigateClose Self
+                    Case Break
+                Case Else
+                    Send NavigatePath of oDetailButton
+            Case End
+        End_Procedure
+    End_Object
+
+    Object oActionGroup is a cWebMenuGroup
+        Set psGroupName to "MainActions"
+
+        Object oSearch is a cWebMenuItem
+            Set psCaption to C_$Search
+            Set psCSSClass to "WebPromptMenuItem"
+
+            Procedure OnClick
+                Send Search of oList
+            End_Procedure
+        End_Object
+
+        Object oNewButton is a cWebMenuItem
+            Set psCaption to "Nuevo jugador"
+            Set psCSSClass to "WebClearMenuItem"
+
+            WebRegisterPath ntNavigateForward oZoomJugador Self "NuevoJugador"
+
+            Procedure OnClick
+                Send NavigatePath
+            End_Procedure
+
+            Procedure OnGetNavigateForwardData tWebNavigateData ByRef NavigateData Handle hoToView
+                Move True to NavigateData.bNewRecord
+            End_Procedure
+        End_Object
+
+        Object oFindTop is a cWebMenuItem
+            Set psCaption to C_$Top
+            Set peActionDisplay to adMenu
+            Set pbBeginGroup to True
+
+            Procedure OnClick
+                Send MoveToFirstRow of oList
+            End_Procedure
+        End_Object
+
+        Object oFindLast is a cWebMenuItem
+            Set psCaption to C_$Bottom
+            Set peActionDisplay to adMenu
+
+            Procedure OnClick
+                Send MoveToLastRow of oList
+            End_Procedure
+        End_Object
+    End_Object
+
+    Procedure OnNavigateForward tWebNavigateData NavigateData Handle hoInvokingView Handle hoInvokingObject
+        Boolean bLookup
+
+        Send SetBreadcrumbCaption "Jugadores"
+        Send SetHeaderCaption     "Jugadores"
+
+        Move (NavigateData.eNavigateType=nfFromChild or NavigateData.eNavigateType=nfFromMain) to bLookup
+        WebSet pbRender of oNewButton    to (not(bLookup))
+        WebSet pbRender of oDetailButton to (not(bLookup))
+        WebSet pbRender of oequipoNombre to True
+        WebSet pbRender of oHeader       to False
+
+        If (NavigateData.eNavigateType=nfFromParent) Begin
+            WebSet peDbGridType of oList to gtAllData
+            WebSet pbRender of oHeader to True
+            WebSet psCaption of oHeader to ("Equipo: " + Trim(equipo.Nombre))
+            WebSet pbRender of oequipoNombre to False
+            Send SetHeaderCaption ("Jugadores de " + Trim(equipo.Nombre))
+        End
+        Else Begin
+            WebSet peDbGridType of oList to gtAutomatic
+        End
+    End_Procedure
+
+End_Object

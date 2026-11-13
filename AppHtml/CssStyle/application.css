@@ -1,0 +1,176 @@
+/* =====================================================================
+   FUTBOL WEB APP - Personalizacion del tema Df_Material
+   ---------------------------------------------------------------------
+   Este archivo se carga en Index.html y NO toca el tema original
+   (CssThemes/Df_Material/theme.css). Para volver al tema azul de
+   DataFlex basta con vaciar este archivo.
+
+   Se usa "html:root" (en vez de ":root") para tener mas prioridad que
+   el theme.css, que DataFlex carga dinamicamente.
+
+   Tras cambiar algo: recargar el navegador con Ctrl+F5 (cache).
+   ===================================================================== */
+
+
+/* ---------------------------------------------------------------------
+   1. PALETA DE COLORES (variables del tema)
+   --------------------------------------------------------------------- */
+html:root {
+    /* Color principal: verde cesped (de oscuro a muy claro) */
+    --df-MainDark:    #1B5E20;
+    --df-MainRegular: #2E7D32;
+    --df-MainMedium:  #388E3C;
+    --df-MainLight:   #43A047;
+    --df-MainLight2:  #A5D6A7;
+    --df-MainLight3:  #C8E6C9;
+    --df-MainLight4:  #E8F5E9;
+
+    /* Resaltado y avisos: amarillo/dorado (trofeo, tarjeta amarilla) */
+    --df-Highlight:      #FBC02D;
+    --df-WarningRegular: #FBC02D;
+    --df-WarningDark:    #F9A825;
+
+    /* Errores: rojo tarjeta roja */
+    --df-ErrorRegular: #D32F2F;
+    --df-ErrorDark:    #B71C1C;
+
+    /* Botones un poco mas redondeados y altos */
+    --df-BtnBorderRadius: 6px;
+    --df-BtnHeight: 30px;
+
+    /* Campos de formulario con esquinas suaves */
+    --df-CtrBorderRadius: 4px;
+    --df-FrmBorderRadius: 4px;
+
+    /* Colores propios de esta aplicacion (no son del tema) */
+    --futbol-cesped:        #2E7D32;
+    --futbol-cesped-claro:  #388E3C;
+    --futbol-cesped-oscuro: #1B5E20;
+    --futbol-linea:         rgba(255, 255, 255, 0.85);
+    --futbol-oro:           #FBC02D;
+}
+
+
+/* ---------------------------------------------------------------------
+   2. FONDO GENERAL
+   --------------------------------------------------------------------- */
+body,
+.WebApp {
+    background-color: #F1F8F1;
+}
+
+
+/* ---------------------------------------------------------------------
+   3. CABECERA: verde oscuro con una linea dorada debajo
+   --------------------------------------------------------------------- */
+.HeaderPanel.WebPanel .WebContainer {
+    background-color: var(--futbol-cesped-oscuro);
+}
+
+.HeaderPanel {
+    border-bottom: 3px solid var(--futbol-oro);
+}
+
+
+/* ---------------------------------------------------------------------
+   4. DASHBOARD: los cuadrados (tiles) como un campo de futbol
+   --------------------------------------------------------------------- */
+
+/* Base comun: esquinas redondeadas, sombra y efecto al pasar el raton */
+.Dashboard .Tile .WebCon_Sizer {
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.Dashboard .Tile .WebCon_Sizer:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* Cesped "cortado" a franjas, como en un estadio */
+.Dashboard .Tile.Light .WebCon_Sizer,
+.Dashboard .Tile.LightAlternate .WebCon_Sizer,
+.Dashboard .Tile.Dark .WebCon_Sizer,
+.Dashboard .Tile.DarkAlternate .WebCon_Sizer {
+    color: #ffffff;
+    border: 2px solid var(--futbol-linea);   /* linea de cal */
+    background-image: repeating-linear-gradient(
+        90deg,
+        var(--futbol-cesped)       0px,
+        var(--futbol-cesped)       40px,
+        var(--futbol-cesped-claro) 40px,
+        var(--futbol-cesped-claro) 80px
+    );
+}
+
+/* Variantes: mismo cesped con distinto tono para diferenciar los tiles */
+.Dashboard .Tile.LightAlternate .WebCon_Sizer {
+    background-image: repeating-linear-gradient(
+        90deg,
+        #33691E 0px, #33691E 40px,
+        #558B2F 40px, #558B2F 80px
+    );
+}
+
+.Dashboard .Tile.Dark .WebCon_Sizer {
+    background-image: repeating-linear-gradient(
+        90deg,
+        #1B5E20 0px, #1B5E20 40px,
+        #2E7D32 40px, #2E7D32 80px
+    );
+}
+
+.Dashboard .Tile.DarkAlternate .WebCon_Sizer {
+    background-image: repeating-linear-gradient(
+        90deg,
+        #004D40 0px, #004D40 40px,
+        #00695C 40px, #00695C 80px
+    );
+}
+
+/* Textos de los tiles en blanco con algo de sombra para que se lean bien */
+.Dashboard .Tile .Tile_Title {
+    color: #ffffff;
+    font-weight: bold;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.Dashboard .Tile .Tile_Subtitle {
+    color: var(--futbol-oro);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+
+/* ---------------------------------------------------------------------
+   5. LISTAS (Select)
+   La fila seleccionada ya sale en verde claro sola, porque el tema usa
+   --df-MainLight3 (definido arriba).
+   --------------------------------------------------------------------- */
+
+/* Linea principal de cada fila (nombre) en verde oscuro y negrita */
+.MobileList .RowCaption {
+    color: var(--futbol-cesped-oscuro);
+    font-weight: bold;
+}
+
+
+/* ---------------------------------------------------------------------
+   6. GRUPOS de las Zoom: titulo con una barra verde a la izquierda
+   --------------------------------------------------------------------- */
+html body .WebGroup.WebGrp_HasCaption > .WebCon_Inner > div > .WebGrp_Caption {
+    border-left: 4px solid var(--futbol-cesped);
+    padding-left: 8px;
+    color: var(--futbol-cesped-oscuro);
+}
+
+
+/* ---------------------------------------------------------------------
+   7. CABECERA DE LAS SELECT FILTRADAS ("Liga: LaLiga", "Equipo: ...")
+   --------------------------------------------------------------------- */
+.LabelCaption {
+    color: var(--futbol-cesped-oscuro);
+    font-weight: bold;
+    border-bottom: 2px solid var(--futbol-oro);
+    padding-bottom: 4px;
+}
